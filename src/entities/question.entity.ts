@@ -32,10 +32,10 @@ export class Question extends BaseEntity {
   @Column({ length: 150, default: '' })
   title: string;
 
-  @Column({ name: 'original_text', type: 'mediumtext' })
+  @Column({ name: 'original_text', type: 'text' })
   originalText: string;
 
-  @Column({ name: 'parsed_text', type: 'mediumtext' })
+  @Column({ name: 'parsed_text', type: 'text' })
   parsedText: string;
 
   @Column({ type: 'int', default: QuestionPin.UNPIN })

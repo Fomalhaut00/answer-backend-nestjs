@@ -1,6 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { Activity } from '../entities/activity.entity';
 import { User } from '../entities/user.entity';
+import { Question } from '../entities/question.entity';
 import { BaseEntity } from '../entities/base.entity';
 
 export const databaseConfig: TypeOrmModuleOptions = {
@@ -10,7 +11,7 @@ export const databaseConfig: TypeOrmModuleOptions = {
   username: 'postgres',
   password: 'postgres',
   database: 'answer_db',
-  entities: [BaseEntity, User, Activity],
+  entities: [BaseEntity, User, Activity, Question],
   synchronize: true, // 开发环境可以使用，生产环境建议关闭
   logging: true,
 }; 

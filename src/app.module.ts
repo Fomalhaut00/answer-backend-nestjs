@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './modules/user/user.module';
 import { databaseConfig } from './config/database.config';
+import { QuestionModule } from './modules/question/question.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { databaseConfig } from './config/database.config';
       signOptions: { expiresIn: '1d' },
     }),
     UserModule,
+    QuestionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
