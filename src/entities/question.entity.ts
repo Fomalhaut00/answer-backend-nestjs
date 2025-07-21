@@ -1,5 +1,4 @@
-import { Entity, Column } from 'typeorm';
-import { BaseEntity } from './base.entity';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 export enum QuestionStatus {
   AVAILABLE = 1,
@@ -19,9 +18,18 @@ export enum QuestionShow {
 }
 
 @Entity('question')
-export class Question extends BaseEntity {
+export class Question {
+  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
+  id: string;
+
   @Column({ name: 'user_id' })
   userId: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+    createdAt: Date;
+  
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 
   @Column({ name: 'invite_user_id', type: 'text', nullable: true })
   inviteUserId: string;

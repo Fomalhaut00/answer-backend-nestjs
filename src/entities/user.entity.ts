@@ -1,5 +1,4 @@
-import { Entity, Column } from 'typeorm';
-import { BaseEntity } from './base.entity';
+import { Entity, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 export enum UserStatus {
   AVAILABLE = 1,
@@ -13,7 +12,16 @@ export enum EmailStatus {
 }
 
 @Entity('user')
-export class User extends BaseEntity {
+export class User {
+  @PrimaryGeneratedColumn('increment', { type: 'bigint'})
+  id: number;
+  
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
   @Column({ length: 50, unique: true })
   username: string;
 
