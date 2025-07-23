@@ -1,4 +1,5 @@
-import { Entity, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { UserRoleRel } from './user-role-rel.entity';
 
 export enum UserStatus {
   AVAILABLE = 1,
@@ -14,7 +15,7 @@ export enum EmailStatus {
 @Entity('user')
 export class User {
   @PrimaryGeneratedColumn('increment', { type: 'bigint'})
-  id: number;
+  id: string;
   
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
@@ -96,4 +97,7 @@ export class User {
 
   @Column({ name: 'last_login_date', type: 'timestamp', nullable: true })
   lastLoginDate: Date;
+
+  @OneToMany(() => UserRoleRel, userRoleRel => userRoleRel.user)
+  userRoleRels: UserRoleRel[];
 } 
