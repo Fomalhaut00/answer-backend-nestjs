@@ -19,7 +19,7 @@ export enum QuestionShow {
 
 @Entity('question')
 export class Question {
-  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
+  @PrimaryGeneratedColumn('increment')
   id: string;
 
   @Column({ name: 'user_id' })

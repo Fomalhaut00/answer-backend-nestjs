@@ -14,7 +14,7 @@ export enum EmailStatus {
 
 @Entity('user')
 export class User {
-  @PrimaryGeneratedColumn('increment', { type: 'bigint'})
+  @PrimaryGeneratedColumn('increment')
   id: string;
   
   @CreateDateColumn({ name: 'created_at' })

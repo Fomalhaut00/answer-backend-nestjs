@@ -13,7 +13,7 @@ export class UserRoleRel {
   @UpdateDateColumn({ name: 'updated_at', comment: 'update time' })
   updatedAt: Date;
 
-  @Column({ name: 'user_id', type: 'bigint', default: 0, comment: 'user id' })
+  @Column({ name: 'user_id', type: 'int', default: 0, comment: 'user id' })
   userId: string;
 
   @Column({ name: 'role_id', type: 'int', default: 0, comment: 'role id' })

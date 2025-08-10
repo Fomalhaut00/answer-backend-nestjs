@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 
 @Entity('activities')
 export class Activity {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
+  @PrimaryGeneratedColumn('increment')
   id: number;
 
   @CreateDateColumn({ type: 'timestamp', nullable: true })
@@ -14,17 +14,17 @@ export class Activity {
   @Column({ type: 'timestamp', nullable: true })
   cancelled_at: Date;
 
-  @Column({ type: 'bigint', name: 'user_id' })
-  userId: number;
+  @Column({ type: 'int', name: 'user_id' })
+  userId: string;
 
-  @Column({ type: 'bigint', name: 'trigger_user_id', default: 0 })
-  triggerUserId: number;
+  @Column({ type: 'int', name: 'trigger_user_id', default: 0 })
+  triggerUserId: string;
 
-  @Column({ type: 'bigint', name: 'object_id', default: 0 })
-  objectId: number;
+  @Column({ type: 'int', name: 'object_id', default: 0 })
+  objectId: string;
 
-  @Column({ type: 'bigint', name: 'original_object_id', default: 0 })
-  originalObjectId: number;
+  @Column({ type: 'int', name: 'original_object_id', default: 0 })
+  originalObjectId: string;
 
   @Column({ type: 'int', name: 'activity_type' })
   activityType: number;
@@ -38,6 +38,6 @@ export class Activity {
   @Column({ type: 'smallint', name: 'has_rank', default: 0 })
   hasRank: number;
 
-  @Column({ type: 'bigint', name: 'revision_id', default: 0 })
+  @Column({ type: 'int', name: 'revision_id', default: 0 })
   revisionId: number;
 } 
