@@ -138,3 +138,13 @@ export class AdminStatsResponse {
   questions_today: number;
   answers_today: number;
 }
+
+// 用户角色管理DTO - 与Go项目schema一致
+export class UpdateUserRoleDto {
+  @IsString()
+  user_id: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  role_id: number;
+}

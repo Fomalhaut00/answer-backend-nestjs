@@ -17,13 +17,16 @@ import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { RolePageDto, UpdateUserRoleDto } from './dto/role-query.dto';
+
 // import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 // import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('role')
 // @UseGuards(JwtAuthGuard, AdminGuard) // 需要管理员权限
 export class RoleController {
-  constructor(private readonly roleService: RoleService) {}
+  constructor(
+    private readonly roleService: RoleService
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -88,4 +91,8 @@ export class RoleController {
   async getUsersByRole(@Param('roleId', ParseIntPipe) roleId: number) {
     return this.roleService.getUsersByRole(roleId);
   }
+
+  // 注意：Go项目中没有独立的user-role-rel或power-rel API路径
+  // 用户角色管理通过AdminController的 PUT /user/role 实现
+  // 权限管理通过SiteInfoController的 GET/PUT /setting/privileges 实现
 }

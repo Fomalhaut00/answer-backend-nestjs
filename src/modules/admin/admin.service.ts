@@ -6,13 +6,16 @@ import { Question, QuestionStatus } from '../../entities/question.entity';
 import { Answer, AnswerStatus } from '../../entities/answer.entity';
 import { Comment } from '../../entities/comment.entity';
 import { Vote } from '../../entities/vote.entity';
-import { 
+import { Role } from '../../entities/role.entity';
+import { UserRoleRel } from '../../entities/user-role-rel.entity';
+import {
   AdminUserPageDto,
   UpdateUserStatusDto,
   AdminQuestionPageDto,
   AdminAnswerPageDto,
   SystemConfigDto,
-  AdminStatsResponse
+  AdminStatsResponse,
+  UpdateUserRoleDto
 } from './dto/admin.dto';
 
 @Injectable()
@@ -28,6 +31,10 @@ export class AdminService {
     private readonly commentRepository: Repository<Comment>,
     @InjectRepository(Vote)
     private readonly voteRepository: Repository<Vote>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+    @InjectRepository(UserRoleRel)
+    private readonly userRoleRelRepository: Repository<UserRoleRel>,
   ) {}
 
   async getDashboardStats(): Promise<AdminStatsResponse> {
@@ -455,5 +462,60 @@ export class AdminService {
     console.log(`Admin ${adminId} resolved report ${reportId} with action ${body.action}. Reason: ${body.reason}`);
 
     return { message: 'Report resolved successfully' };
+  }
+
+  // ===== 用户角色管理 - 与Go项目API一致 =====
+
+  async updateUserRole(updateUserRoleDto: UpdateUserRoleDto, operatorId: string) {
+    const { user_id, role_id } = updateUserRoleDto;
+
+    // 检查用户是否存在
+    const user = await this.userRepository.findOne({ where: { id: user_id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // 检查角色是否存在
+    const role = await this.roleRepository.findOne({ where: { id: role_id } });
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    // 用户不能修改自己的角色
+    if (user_id === operatorId) {
+      throw new ForbiddenException('Users cannot modify their own roles');
+    }
+
+    // 查找现有的用户角色关系
+    const existingUserRole = await this.userRoleRelRepository.findOne({
+      where: { userId: user_id }
+    });
+
+    if (existingUserRole) {
+      // 更新现有角色
+      existingUserRole.roleId = role_id;
+      await this.userRoleRelRepository.save(existingUserRole);
+    } else {
+      // 创建新的用户角色关系
+      const newUserRole = this.userRoleRelRepository.create({
+        userId: user_id,
+        roleId: role_id
+      });
+      await this.userRoleRelRepository.save(newUserRole);
+    }
+
+    return { message: 'User role updated successfully' };
+  }
+
+  async getRoles() {
+    const roles = await this.roleRepository.find({
+      select: ['id', 'name', 'description']
+    });
+
+    return roles.map(role => ({
+      id: role.id,
+      name: role.name,
+      description: role.description
+    }));
   }
 }

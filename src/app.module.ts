@@ -8,9 +8,7 @@ import { UserModule } from './modules/user/user.module';
 import { databaseConfig } from './config/database.config';
 import { QuestionModule } from './modules/question/question.module';
 import { RoleModule } from './modules/role/role.module';
-import { UserRoleRelModule } from './modules/user-role-rel/user_role_rel_module';
 import { PowerModule } from './modules/power/power.module';
-import { RolePowerRelModule } from './modules/role-power-rel/role-power-rel.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { AnswerModule } from './modules/answer/answer.module';
 import { CommentModule } from './modules/comment/comment.module';
@@ -33,9 +31,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     UserModule,
     QuestionModule,
     RoleModule,
-    UserRoleRelModule,
     PowerModule,
-    RolePowerRelModule,
     PermissionModule,
     AnswerModule,
     CommentModule,

@@ -15,12 +15,13 @@ import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { RolesGuard } from '../../guards/roles.guard';
 import { RequireRoles } from '../../decorators/roles.decorator';
-import { 
+import {
   AdminUserPageDto,
   UpdateUserStatusDto,
   AdminQuestionPageDto,
   AdminAnswerPageDto,
-  SystemConfigDto
+  SystemConfigDto,
+  UpdateUserRoleDto
 } from './dto/admin.dto';
 
 @Controller('admin')
@@ -50,6 +51,22 @@ export class AdminController {
     @Request() req
   ) {
     return this.adminService.updateUserStatus(userId, updateUserStatusDto, req.user.sub);
+  }
+
+  // 用户角色管理 - 与Go项目API路径一致: PUT /user/role
+  @Put('user/role')
+  @RequireRoles('admin')
+  async updateUserRole(
+    @Body() updateUserRoleDto: UpdateUserRoleDto,
+    @Request() req
+  ) {
+    return this.adminService.updateUserRole(updateUserRoleDto, req.user.sub);
+  }
+
+  // 角色列表 - 与Go项目API路径一致: GET /roles
+  @Get('roles')
+  async getRoles() {
+    return this.adminService.getRoles();
   }
 
   @Get('users/:userId')
