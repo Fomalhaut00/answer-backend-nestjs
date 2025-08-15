@@ -119,4 +119,36 @@ export class QuestionController {
   async getPersonalAnswerPage(@Query() query: any) {
     return this.questionService.getPersonalAnswerPage(query);
   }
+
+  // Go项目中的额外接口
+  @Post('answer')
+  // @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async addQuestionByAnswer(@Request() req, @Body() body: any) {
+    return this.questionService.addQuestionByAnswer(req.user?.sub, body);
+  }
+
+  @Put('invite')
+  // @UseGuards(JwtAuthGuard)
+  async updateQuestionInviteUser(@Request() req, @Body() inviteDto: QuestionInviteDto) {
+    return this.questionService.updateQuestionInviteUser(req.user?.sub, inviteDto);
+  }
+
+  @Put('status')
+  // @UseGuards(JwtAuthGuard)
+  async closeQuestion(@Request() req, @Body() body: { id: string; close_type: number; close_msg?: string }) {
+    return this.questionService.closeQuestion(req.user?.sub, body);
+  }
+
+  @Put('reopen')
+  // @UseGuards(JwtAuthGuard)
+  async reopenQuestion(@Request() req, @Body() body: { id: string }) {
+    return this.questionService.reopenQuestion(req.user?.sub, body.id);
+  }
+
+  @Get('similar')
+  // @UseGuards(JwtAuthGuard)
+  async getSimilarQuestions(@Query() query: { question_id: string }) {
+    return this.questionService.getSimilarQuestions(query.question_id);
+  }
 }

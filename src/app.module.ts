@@ -9,6 +9,12 @@ import { databaseConfig } from './config/database.config';
 import { QuestionModule } from './modules/question/question.module';
 import { RoleModule } from './modules/role/role.module';
 import { PowerModule } from './modules/power/power.module';
+import { SiteInfoModule } from './modules/siteinfo/siteinfo.module';
+import { LanguageModule } from './modules/language/language.module';
+import { CollectionModule } from './modules/collection/collection.module';
+import { FollowModule } from './modules/follow/follow.module';
+import { ReportModule } from './modules/report/report.module';
+import { UploadModule } from './modules/upload/upload.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { AnswerModule } from './modules/answer/answer.module';
 import { CommentModule } from './modules/comment/comment.module';
@@ -33,6 +39,12 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     RoleModule,
     PowerModule,
     PermissionModule,
+    SiteInfoModule,
+    LanguageModule,
+    CollectionModule,
+    FollowModule,
+    ReportModule,
+    UploadModule,
     AnswerModule,
     CommentModule,
     VoteModule,

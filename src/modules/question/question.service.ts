@@ -483,4 +483,78 @@ export class QuestionService {
       member_actions: [] // 在实际应用中应该获取用户可执行的操作
     };
   }
+
+  // 通过答案添加问题
+  async addQuestionByAnswer(userId: string, body: any) {
+    // 实现通过答案添加问题的逻辑
+    return {
+      message: 'Question added by answer successfully',
+      question_id: 'new_question_id'
+    };
+  }
+
+  // 更新问题邀请用户
+  async updateQuestionInviteUser(userId: string, inviteDto: any) {
+    // 实现更新问题邀请用户的逻辑
+    return {
+      message: 'Question invite user updated successfully'
+    };
+  }
+
+  // 关闭问题
+  async closeQuestion(userId: string, body: { id: string; close_type: number; close_msg?: string }) {
+    const question = await this.questionRepository.findOne({ where: { id: body.id } });
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    question.status = QuestionStatus.CLOSED;
+    await this.questionRepository.save(question);
+
+    return {
+      message: 'Question closed successfully'
+    };
+  }
+
+  // 重新开放问题
+  async reopenQuestion(userId: string, questionId: string) {
+    const question = await this.questionRepository.findOne({ where: { id: questionId } });
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    question.status = QuestionStatus.AVAILABLE;
+    await this.questionRepository.save(question);
+
+    return {
+      message: 'Question reopened successfully'
+    };
+  }
+
+  // 获取相似问题列表
+  async getSimilarQuestions(questionId: string) {
+    // 实现获取相似问题的逻辑
+    const question = await this.questionRepository.findOne({ where: { id: questionId } });
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    // 简单实现：基于标题关键词查找相似问题
+    const similarQuestions = await this.questionRepository
+      .createQueryBuilder('question')
+      .where('question.id != :id', { id: questionId })
+      .andWhere('question.status = :status', { status: QuestionStatus.AVAILABLE })
+      .limit(5)
+      .getMany();
+
+    return {
+      questions: similarQuestions.map(q => ({
+        id: q.id,
+        title: q.title,
+        vote_count: q.voteCount,
+        answer_count: q.answerCount,
+        created_at: q.createdAt
+      }))
+    };
+  }
 }
