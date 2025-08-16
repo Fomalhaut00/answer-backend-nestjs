@@ -12,6 +12,10 @@ import { PowerModule } from './modules/power/power.module';
 import { SiteInfoModule } from './modules/siteinfo/siteinfo.module';
 import { LanguageModule } from './modules/language/language.module';
 import { CollectionModule } from './modules/collection/collection.module';
+import { CollectionGroupModule } from './modules/collection-group/collection-group.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { RankModule } from './modules/rank/rank.module';
+import { ReasonModule } from './modules/reason/reason.module';
 import { FollowModule } from './modules/follow/follow.module';
 import { ReportModule } from './modules/report/report.module';
 import { UploadModule } from './modules/upload/upload.module';
@@ -45,6 +49,10 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     SiteInfoModule,
     LanguageModule,
     CollectionModule,
+    CollectionGroupModule,
+    DashboardModule,
+    RankModule,
+    ReasonModule,
     FollowModule,
     ReportModule,
     UploadModule,

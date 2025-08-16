@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
 import { LanguageService } from './language.service';
 import { Public } from '../../decorators/public.decorator';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
@@ -29,5 +29,20 @@ export class LanguageController {
   @RequireRoles('admin')
   async getAdminLangOptions() {
     return this.languageService.getAdminLangOptions();
+  }
+
+  // 管理员接口 - 设置默认语言
+  @Put('admin/default')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @RequireRoles('admin')
+  async setDefaultLanguage(@Body('language') languageCode: string) {
+    return this.languageService.setDefaultLanguage(languageCode);
+  }
+
+  // 公开接口 - 获取当前默认语言
+  @Public()
+  @Get('default')
+  async getDefaultLanguage() {
+    return this.languageService.getDefaultLanguage();
   }
 }

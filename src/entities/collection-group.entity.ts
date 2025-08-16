@@ -12,6 +12,9 @@ export class CollectionGroup {
   @Column({ name: 'name', type: 'varchar', length: 50, comment: 'collection group name' })
   name: string;
 
+  @Column({ name: 'description', type: 'varchar', length: 200, nullable: true, comment: 'collection group description' })
+  description?: string;
+
   @Column({ name: 'default_group', type: 'int', default: 1, comment: 'is default group: 1=default, 2=custom' })
   defaultGroup: number;
 
