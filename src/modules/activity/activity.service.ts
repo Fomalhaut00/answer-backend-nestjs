@@ -6,11 +6,15 @@ import { User } from '../../entities/user.entity';
 import { Question } from '../../entities/question.entity';
 import { Answer } from '../../entities/answer.entity';
 import { Comment } from '../../entities/comment.entity';
-import { 
-  ActivityPageDto, 
-  UserTimelineDto, 
-  ActivityResponse, 
-  TimelineResponse 
+import {
+  ActivityPageDto,
+  UserTimelineDto,
+  ActivityResponse,
+  TimelineResponse,
+  VoteDto,
+  UserVotesDto,
+  VoteResponse,
+  UserVoteResponse
 } from './dto/activity.dto';
 
 @Injectable()
@@ -280,5 +284,168 @@ export class ActivityService {
     });
 
     return this.activityRepository.save(activity);
+  }
+
+  // 投票功能实现
+  async voteUp(userId: string, voteDto: VoteDto): Promise<VoteResponse> {
+    return this.handleVote(userId, voteDto, true);
+  }
+
+  async voteDown(userId: string, voteDto: VoteDto): Promise<VoteResponse> {
+    return this.handleVote(userId, voteDto, false);
+  }
+
+  private async handleVote(userId: string, voteDto: VoteDto, isUpVote: boolean): Promise<VoteResponse> {
+    const { object_id, object_type = 'question' } = voteDto;
+
+    // 确定活动类型
+    let activityType: number;
+    if (isUpVote) {
+      activityType = object_type === 'question' ? 1 : object_type === 'answer' ? 2 : 3; // vote_up
+    } else {
+      activityType = object_type === 'question' ? 4 : object_type === 'answer' ? 5 : 6; // vote_down
+    }
+
+    // 检查是否已经投过票
+    const existingVote = await this.activityRepository.findOne({
+      where: {
+        userId,
+        objectId: object_id,
+        activityType: activityType,
+        cancelled: 0
+      }
+    });
+
+    let voteCountChange = 0;
+    let voteStatus = '';
+
+    if (existingVote) {
+      // 取消投票
+      existingVote.cancelled = 1;
+      await this.activityRepository.save(existingVote);
+      voteCountChange = isUpVote ? -1 : 1;
+      voteStatus = '';
+    } else {
+      // 检查是否有相反的投票
+      const oppositeActivityType = isUpVote ?
+        (object_type === 'question' ? 4 : object_type === 'answer' ? 5 : 6) :
+        (object_type === 'question' ? 1 : object_type === 'answer' ? 2 : 3);
+
+      const oppositeVote = await this.activityRepository.findOne({
+        where: {
+          userId,
+          objectId: object_id,
+          activityType: oppositeActivityType,
+          cancelled: 0
+        }
+      });
+
+      if (oppositeVote) {
+        // 取消相反的投票
+        oppositeVote.cancelled = 1;
+        await this.activityRepository.save(oppositeVote);
+        voteCountChange = isUpVote ? 2 : -2; // 从-1变为1或从1变为-1
+      } else {
+        voteCountChange = isUpVote ? 1 : -1;
+      }
+
+      // 创建新投票
+      const newVote = this.activityRepository.create({
+        userId,
+        objectId: object_id,
+        activityType,
+        cancelled: 0,
+        rank: isUpVote ? 10 : -2, // 根据Go项目的配置
+        hasRank: 1
+      });
+      await this.activityRepository.save(newVote);
+      voteStatus = isUpVote ? 'voted_up' : 'voted_down';
+    }
+
+    // 更新对象的投票计数
+    await this.updateObjectVoteCount(object_id, object_type, voteCountChange);
+
+    // 获取当前投票计数
+    const voteCount = await this.getObjectVoteCount(object_id, object_type);
+
+    return {
+      vote_count: voteCount,
+      vote_status: voteStatus
+    };
+  }
+
+  private async updateObjectVoteCount(objectId: string, objectType: string, change: number) {
+    if (objectType === 'question') {
+      await this.questionRepository.increment({ id: objectId }, 'voteCount', change);
+    } else if (objectType === 'answer') {
+      await this.answerRepository.increment({ id: objectId }, 'voteCount', change);
+    }
+    // Comment表可能没有voteCount字段，根据需要添加
+  }
+
+  private async getObjectVoteCount(objectId: string, objectType: string): Promise<number> {
+    if (objectType === 'question') {
+      const question = await this.questionRepository.findOne({ where: { id: objectId } });
+      return question?.voteCount || 0;
+    } else if (objectType === 'answer') {
+      const answer = await this.answerRepository.findOne({ where: { id: objectId } });
+      return answer?.voteCount || 0;
+    }
+    return 0;
+  }
+
+  async getUserVotes(userId: string, userVotesDto: UserVotesDto): Promise<{ votes: UserVoteResponse[], total: number }> {
+    const { page = 1, page_size = 20 } = userVotesDto;
+    const skip = (page - 1) * page_size;
+
+    // 获取用户的投票活动
+    const voteActivityTypes = [1, 2, 3, 4, 5, 6]; // vote_up 和 vote_down 的活动类型
+    const [activities, total] = await this.activityRepository.findAndCount({
+      where: {
+        userId,
+        activityType: voteActivityTypes as any,
+        cancelled: 0
+      },
+      order: { created_at: 'DESC' },
+      skip,
+      take: page_size
+    });
+
+    const votes: UserVoteResponse[] = await Promise.all(
+      activities.map(async (activity) => {
+        const objectType = this.getObjectTypeFromActivityType(activity.activityType);
+        const voteType = this.getVoteTypeFromActivityType(activity.activityType);
+
+        let objectInfo: any = null;
+        if (objectType === 'question') {
+          objectInfo = await this.questionRepository.findOne({ where: { id: activity.objectId } });
+        } else if (objectType === 'answer') {
+          objectInfo = await this.answerRepository.findOne({ where: { id: activity.objectId } });
+        } else if (objectType === 'comment') {
+          objectInfo = await this.commentRepository.findOne({ where: { id: activity.objectId } });
+        }
+
+        return {
+          object_id: activity.objectId,
+          object_type: objectType,
+          vote_type: voteType,
+          created_at: activity.created_at,
+          object_info: objectInfo
+        };
+      })
+    );
+
+    return { votes, total };
+  }
+
+  private getObjectTypeFromActivityType(activityType: number): string {
+    if ([1, 4].includes(activityType)) return 'question';
+    if ([2, 5].includes(activityType)) return 'answer';
+    if ([3, 6].includes(activityType)) return 'comment';
+    return 'unknown';
+  }
+
+  private getVoteTypeFromActivityType(activityType: number): number {
+    return [1, 2, 3].includes(activityType) ? 1 : -1; // 1 for up, -1 for down
   }
 }

@@ -5,7 +5,7 @@ import { User, UserStatus } from '../../entities/user.entity';
 import { Question, QuestionStatus } from '../../entities/question.entity';
 import { Answer, AnswerStatus } from '../../entities/answer.entity';
 import { Comment } from '../../entities/comment.entity';
-import { Vote } from '../../entities/vote.entity';
+import { Activity } from '../../entities/activity.entity';
 import { Role } from '../../entities/role.entity';
 import { UserRoleRel } from '../../entities/user-role-rel.entity';
 import {
@@ -29,8 +29,8 @@ export class AdminService {
     private readonly answerRepository: Repository<Answer>,
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
-    @InjectRepository(Vote)
-    private readonly voteRepository: Repository<Vote>,
+    @InjectRepository(Activity)
+    private readonly activityRepository: Repository<Activity>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(UserRoleRel)
@@ -56,7 +56,7 @@ export class AdminService {
       this.questionRepository.count(),
       this.answerRepository.count(),
       this.commentRepository.count(),
-      this.voteRepository.count(),
+      this.activityRepository.count({ where: { activityType: [1, 2, 3, 4, 5, 6] as any } }),
       this.userRepository.count({ where: { lastLoginDate: MoreThan(today) } }),
       this.userRepository.count({ where: { createdAt: MoreThan(today) } }),
       this.questionRepository.count({ where: { createdAt: MoreThan(today) } }),

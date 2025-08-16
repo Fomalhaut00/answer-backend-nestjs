@@ -4,7 +4,8 @@ import { User } from '../../entities/user.entity';
 import { Question } from '../../entities/question.entity';
 import { Answer } from '../../entities/answer.entity';
 import { Comment } from '../../entities/comment.entity';
-import { Vote } from '../../entities/vote.entity';
+
+import { Activity } from '../../entities/activity.entity';
 import { Role } from '../../entities/role.entity';
 import { UserRoleRel } from '../../entities/user-role-rel.entity';
 import { AdminService } from './admin.service';
@@ -13,7 +14,7 @@ import { RoleModule } from '../role/role.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Question, Answer, Comment, Vote, Role, UserRoleRel]),
+    TypeOrmModule.forFeature([User, Question, Answer, Comment, Activity, Role, UserRoleRel]),
     RoleModule
   ],
   providers: [AdminService],

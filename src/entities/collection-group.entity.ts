@@ -1,22 +1,19 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 
-@Entity('collection')
-export class Collection {
+@Entity('collection_group')
+export class CollectionGroup {
   @PrimaryGeneratedColumn('increment')
   id: string;
 
   @Column({ name: 'user_id', type: 'int', comment: 'user id' })
   userId: string;
 
-  @Column({ name: 'object_id', type: 'int', comment: 'object id' })
-  objectId: string;
+  @Column({ name: 'name', type: 'varchar', length: 50, comment: 'collection group name' })
+  name: string;
 
-  @Column({ name: 'object_type', type: 'varchar', length: 100, comment: 'object type: question, answer' })
-  objectType: string;
-
-  @Column({ name: 'user_collection_group_id', type: 'int', comment: 'user collection group id' })
-  userCollectionGroupId: string;
+  @Column({ name: 'default_group', type: 'int', default: 1, comment: 'is default group: 1=default, 2=custom' })
+  defaultGroup: number;
 
   @CreateDateColumn({ name: 'created_at', comment: 'create time' })
   createdAt: Date;
