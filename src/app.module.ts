@@ -15,10 +15,13 @@ import { CollectionModule } from './modules/collection/collection.module';
 import { FollowModule } from './modules/follow/follow.module';
 import { ReportModule } from './modules/report/report.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { MetaModule } from './modules/meta/meta.module';
+import { RevisionModule } from './modules/revision/revision.module';
+import { ReviewModule } from './modules/review/review.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { AnswerModule } from './modules/answer/answer.module';
 import { CommentModule } from './modules/comment/comment.module';
-import { VoteModule } from './modules/vote/vote.module';
+
 import { TagModule } from './modules/tag/tag.module';
 import { SearchModule } from './modules/search/search.module';
 import { ActivityModule } from './modules/activity/activity.module';
@@ -45,9 +48,12 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     FollowModule,
     ReportModule,
     UploadModule,
+    MetaModule,
+    RevisionModule,
+    ReviewModule,
     AnswerModule,
     CommentModule,
-    VoteModule,
+
     TagModule,
     SearchModule,
     ActivityModule,
