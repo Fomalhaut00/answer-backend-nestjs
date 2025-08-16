@@ -16,6 +16,7 @@ import { CollectionGroupModule } from './modules/collection-group/collection-gro
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { RankModule } from './modules/rank/rank.module';
 import { ReasonModule } from './modules/reason/reason.module';
+
 import { FollowModule } from './modules/follow/follow.module';
 import { ReportModule } from './modules/report/report.module';
 import { UploadModule } from './modules/upload/upload.module';

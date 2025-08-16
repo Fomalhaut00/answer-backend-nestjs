@@ -32,7 +32,6 @@ import { PluginConfig } from '../entities/plugin-config.entity';
 import { PluginUserConfig } from '../entities/plugin-user-config.entity';
 import { PluginKVStorage } from '../entities/plugin-kv-storage.entity';
 import { FileRecord } from '../entities/file-record.entity';
-import { Reason } from '../entities/reason.entity';
 
 export const databaseConfig: TypeOrmModuleOptions = {
   type: 'postgres',
@@ -75,7 +74,6 @@ export const databaseConfig: TypeOrmModuleOptions = {
     PluginUserConfig,
     PluginKVStorage,
     FileRecord,
-    Reason,
   ],
   synchronize: true, // 开发环境可以使用，生产环境建议关闭
   logging: true,

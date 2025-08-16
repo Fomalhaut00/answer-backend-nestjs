@@ -1,196 +1,208 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Reason } from '../../entities/reason.entity';
-import { 
-  CreateReasonDto, 
-  UpdateReasonDto, 
-  ReasonPageDto,
-  ReasonResponse,
-  ReasonPageResponse,
-  ReasonListResponse
+import { Config } from '../../entities/config.entity';
+import {
+  ReasonReqDto,
+  ReasonItemDto,
+  ReasonListResponseDto
 } from './dto/reason.dto';
 
 @Injectable()
 export class ReasonService {
   constructor(
-    @InjectRepository(Reason)
-    private readonly reasonRepository: Repository<Reason>,
+    @InjectRepository(Config)
+    private readonly configRepository: Repository<Config>,
   ) {}
 
-  // 获取原因列表（公开接口，用于前端选择）
-  async getReasonList(objectType: string): Promise<ReasonListResponse[]> {
-    const reasons = await this.reasonRepository.find({
-      where: { 
-        objectType,
-        status: 1 // 只返回启用的原因
-      },
-      order: { createdAt: 'ASC' }
+  // 获取原因列表（对应Go的ListReasons方法）
+  async getReasons(req: ReasonReqDto): Promise<ReasonListResponseDto> {
+    const { object_type, action } = req;
+
+    // 构建原因配置键，格式：{object_type}.{action}.reasons
+    const reasonAction = `${object_type}.${action}.reasons`;
+
+    // 从Config表获取原因键列表
+    const reasonKeysConfig = await this.configRepository.findOne({
+      where: { key: reasonAction }
     });
 
-    return reasons.map(reason => ({
-      id: reason.id,
-      title: reason.title,
-      content: reason.content
-    }));
-  }
-
-  // 获取原因分页（管理员接口）
-  async getReasonPage(query: ReasonPageDto): Promise<ReasonPageResponse> {
-    const { page = 1, page_size = 20, reason_type, object_type, status } = query;
-    const skip = (page - 1) * page_size;
-
-    const whereConditions: any = {};
-    if (reason_type) whereConditions.reasonType = reason_type;
-    if (object_type) whereConditions.objectType = object_type;
-    if (status !== undefined) whereConditions.status = status;
-
-    const [reasons, total] = await this.reasonRepository.findAndCount({
-      where: whereConditions,
-      order: { createdAt: 'DESC' },
-      skip,
-      take: page_size
-    });
-
-    const reasonResponses = reasons.map(reason => this.formatReasonResponse(reason));
-
-    return {
-      reasons: reasonResponses,
-      total,
-      page,
-      page_size
-    };
-  }
-
-  // 创建原因
-  async createReason(createDto: CreateReasonDto): Promise<ReasonResponse> {
-    const { reason_type, title, content, object_type, status = 1 } = createDto;
-
-    // 检查是否已存在相同的原因
-    const existingReason = await this.reasonRepository.findOne({
-      where: { 
-        reasonType: reason_type,
-        title,
-        objectType: object_type
-      }
-    });
-
-    if (existingReason) {
-      throw new BadRequestException('Reason with same type, title and object type already exists');
+    if (!reasonKeysConfig) {
+      return { reasons: [] };
     }
 
-    const reason = this.reasonRepository.create({
-      reasonType: reason_type,
-      title,
-      content,
-      objectType: object_type,
-      status
-    });
-
-    const savedReason = await this.reasonRepository.save(reason);
-    return this.formatReasonResponse(savedReason);
-  }
-
-  // 获取原因详情
-  async getReasonDetail(id: string): Promise<ReasonResponse> {
-    const reason = await this.reasonRepository.findOne({ where: { id } });
-    if (!reason) {
-      throw new NotFoundException('Reason not found');
+    let reasonKeys: string[] = [];
+    try {
+      reasonKeys = JSON.parse(reasonKeysConfig.value);
+    } catch (error) {
+      console.error('Failed to parse reason keys:', error);
+      return { reasons: [] };
     }
 
-    return this.formatReasonResponse(reason);
-  }
+    const reasons: ReasonItemDto[] = [];
 
-  // 更新原因
-  async updateReason(id: string, updateDto: UpdateReasonDto): Promise<ReasonResponse> {
-    const reason = await this.reasonRepository.findOne({ where: { id } });
-    if (!reason) {
-      throw new NotFoundException('Reason not found');
-    }
-
-    const { reason_type, title, content, object_type, status } = updateDto;
-
-    // 检查是否与其他原因冲突
-    if (reason_type || title || object_type) {
-      const existingReason = await this.reasonRepository.findOne({
-        where: { 
-          reasonType: reason_type || reason.reasonType,
-          title: title || reason.title,
-          objectType: object_type || reason.objectType
-        }
+    // 遍历每个原因键，获取详细配置
+    for (const reasonKey of reasonKeys) {
+      const reasonConfig = await this.configRepository.findOne({
+        where: { key: reasonKey }
       });
 
-      if (existingReason && existingReason.id !== id) {
-        throw new BadRequestException('Reason with same type, title and object type already exists');
+      if (!reasonConfig) {
+        continue;
+      }
+
+      try {
+        const reasonData = JSON.parse(reasonConfig.value);
+
+        const reasonItem: ReasonItemDto = {
+          reason_key: reasonKey,
+          reason_type: parseInt(reasonConfig.id), // 使用config的ID作为reason_type
+          name: reasonData.name || '',
+          description: reasonData.description || reasonData.desc || '',
+          content_type: reasonData.content_type || 'text',
+          placeholder: reasonData.placeholder || ''
+        };
+
+        reasons.push(reasonItem);
+      } catch (error) {
+        console.error(`Failed to parse reason config for key ${reasonKey}:`, error);
+        continue;
       }
     }
 
-    // 更新字段
-    if (reason_type) reason.reasonType = reason_type;
-    if (title) reason.title = title;
-    if (content !== undefined) reason.content = content;
-    if (object_type) reason.objectType = object_type;
-    if (status !== undefined) reason.status = status;
-
-    const updatedReason = await this.reasonRepository.save(reason);
-    return this.formatReasonResponse(updatedReason);
+    return { reasons };
   }
 
-  // 删除原因
-  async deleteReason(id: string): Promise<{ message: string }> {
-    const reason = await this.reasonRepository.findOne({ where: { id } });
-    if (!reason) {
-      throw new NotFoundException('Reason not found');
-    }
-
-    await this.reasonRepository.remove(reason);
-    return { message: 'Reason deleted successfully' };
-  }
-
-  // 格式化原因响应
-  private formatReasonResponse(reason: Reason): ReasonResponse {
-    return {
-      id: reason.id,
-      reason_type: reason.reasonType,
-      title: reason.title,
-      content: reason.content,
-      object_type: reason.objectType,
-      status: reason.status,
-      created_at: reason.createdAt,
-      updated_at: reason.updatedAt
-    };
-  }
-
-  // 初始化默认原因数据
+  // 初始化默认原因配置（对应Go项目的默认配置）
   async initializeDefaultReasons(): Promise<void> {
-    const defaultReasons = [
+    const defaultConfigs = [
+      // 问题关闭原因
+      {
+        key: 'question.close.reasons',
+        value: JSON.stringify([
+          'reason.question.close.duplicate',
+          'reason.question.close.guideline',
+          'reason.question.close.multiple',
+          'reason.question.close.other'
+        ])
+      },
+      {
+        key: 'reason.question.close.duplicate',
+        value: JSON.stringify({
+          name: 'Duplicate',
+          desc: 'This question has been asked before and already has an answer.',
+          content_type: 'text',
+          placeholder: 'Please provide the link to the original question.'
+        })
+      },
+      {
+        key: 'reason.question.close.guideline',
+        value: JSON.stringify({
+          name: 'A community-specific reason',
+          desc: 'This question doesn\'t meet a community guideline.',
+          content_type: 'text',
+          placeholder: 'Please explain which guideline this question doesn\'t meet.'
+        })
+      },
+
+      {
+        key: 'reason.question.close.multiple',
+        value: JSON.stringify({
+          name: 'Needs more focus',
+          desc: 'This question currently includes multiple questions in one.',
+          content_type: 'text',
+          placeholder: 'Please explain what makes this question unfocused.'
+        })
+      },
+      {
+        key: 'reason.question.close.other',
+        value: JSON.stringify({
+          name: 'Other',
+          desc: 'This question doesn\'t meet our guidelines.',
+          content_type: 'textarea',
+          placeholder: 'Please explain in detail.'
+        })
+      },
+
       // 举报原因
-      { reasonType: 'report', title: 'Spam', content: 'This content is spam', objectType: 'question' },
-      { reasonType: 'report', title: 'Inappropriate', content: 'This content is inappropriate', objectType: 'question' },
-      { reasonType: 'report', title: 'Off-topic', content: 'This content is off-topic', objectType: 'question' },
-      { reasonType: 'report', title: 'Spam', content: 'This content is spam', objectType: 'answer' },
-      { reasonType: 'report', title: 'Inappropriate', content: 'This content is inappropriate', objectType: 'answer' },
-      { reasonType: 'report', title: 'Low quality', content: 'This answer is low quality', objectType: 'answer' },
-      
-      // 关闭原因
-      { reasonType: 'close', title: 'Duplicate', content: 'This question is a duplicate', objectType: 'question' },
-      { reasonType: 'close', title: 'Too broad', content: 'This question is too broad', objectType: 'question' },
-      { reasonType: 'close', title: 'Unclear', content: 'This question is unclear', objectType: 'question' },
-      { reasonType: 'close', title: 'Off-topic', content: 'This question is off-topic', objectType: 'question' },
+      {
+        key: 'question.flag.reasons',
+        value: JSON.stringify([
+          'reason.spam',
+          'reason.rude_or_abusive',
+          'reason.harassment',
+          'reason.other'
+        ])
+      },
+      {
+        key: 'answer.flag.reasons',
+        value: JSON.stringify([
+          'reason.spam',
+          'reason.rude_or_abusive',
+          'reason.harassment',
+          'reason.not_answer',
+          'reason.other'
+        ])
+      },
+      {
+        key: 'reason.spam',
+        value: JSON.stringify({
+          name: 'Spam',
+          desc: 'This post is an advertisement, or vandalism.',
+          content_type: 'text',
+          placeholder: ''
+        })
+      },
+      {
+        key: 'reason.rude_or_abusive',
+        value: JSON.stringify({
+          name: 'Rude or abusive',
+          desc: 'A reasonable person would find this content inappropriate.',
+          content_type: 'text',
+          placeholder: ''
+        })
+      },
+      {
+        key: 'reason.harassment',
+        value: JSON.stringify({
+          name: 'Harassment, bigotry, or abuse',
+          desc: 'This content targets a person or group.',
+          content_type: 'text',
+          placeholder: ''
+        })
+      },
+      {
+        key: 'reason.not_answer',
+        value: JSON.stringify({
+          name: 'Not an answer',
+          desc: 'This was posted as an answer, but it does not attempt to answer the question.',
+          content_type: 'text',
+          placeholder: ''
+        })
+      },
+      {
+        key: 'reason.other',
+        value: JSON.stringify({
+          name: 'Other',
+          desc: 'Something else that requires moderator attention.',
+          content_type: 'textarea',
+          placeholder: 'Please explain in detail.'
+        })
+      }
     ];
 
-    for (const reasonData of defaultReasons) {
-      const existing = await this.reasonRepository.findOne({
-        where: {
-          reasonType: reasonData.reasonType,
-          title: reasonData.title,
-          objectType: reasonData.objectType
-        }
+    // 检查并创建默认配置
+    for (const config of defaultConfigs) {
+      const existing = await this.configRepository.findOne({
+        where: { key: config.key }
       });
 
       if (!existing) {
-        const reason = this.reasonRepository.create(reasonData);
-        await this.reasonRepository.save(reason);
+        const newConfig = this.configRepository.create({
+          key: config.key,
+          value: config.value
+        });
+        await this.configRepository.save(newConfig);
       }
     }
   }
