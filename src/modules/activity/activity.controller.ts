@@ -12,19 +12,15 @@ import { ActivityPageDto, UserTimelineDto } from './dto/activity.dto';
 export class ActivityController {
   constructor(private readonly activityService: ActivityService) {}
 
+  // ========== 需要认证的路由 (RegisterAnswerAPIRouter) ==========
+
   @Get('timeline')
-  async getUserTimeline(@Query() userTimelineDto: UserTimelineDto) {
-    return this.activityService.getUserTimeline(userTimelineDto);
+  async getObjectTimeline(@Query() query: any, @Request() req) {
+    return this.activityService.getObjectTimeline(query, req.user.sub);
   }
 
-  @Get('personal/page')
-  // @UseGuards(JwtAuthGuard)
-  async getPersonalActivityPage(@Request() req, @Query() activityPageDto: ActivityPageDto) {
-    return this.activityService.getPersonalActivityPage(req.user?.sub, activityPageDto);
-  }
-
-  @Get('page')
-  async getActivityPage(@Query() activityPageDto: ActivityPageDto) {
-    return this.activityService.getActivityPage(activityPageDto);
+  @Get('timeline/detail')
+  async getObjectTimelineDetail(@Query() query: any, @Request() req) {
+    return this.activityService.getObjectTimelineDetail(query, req.user.sub);
   }
 }

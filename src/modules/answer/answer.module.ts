@@ -5,11 +5,12 @@ import { Question } from '../../entities/question.entity';
 import { User } from '../../entities/user.entity';
 import { AnswerService } from './answer.service';
 import { AnswerController } from './answer.controller';
+import { AdminAnswerController } from './admin-answer.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Answer, Question, User])],
   providers: [AnswerService],
-  controllers: [AnswerController],
+  controllers: [AnswerController, AdminAnswerController],
   exports: [AnswerService],
 })
 export class AnswerModule {}

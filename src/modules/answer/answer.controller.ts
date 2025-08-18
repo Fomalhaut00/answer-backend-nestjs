@@ -1,16 +1,17 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Body, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
   Query,
   Request,
   UseGuards,
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
+import { OptionalAuth } from '../../decorators/public.decorator';
 import { AnswerService } from './answer.service';
 import { 
   CreateAnswerDto,
@@ -25,54 +26,46 @@ import {
 export class AnswerController {
   constructor(private readonly answerService: AnswerService) {}
 
-  // 答案基本CRUD操作
-  @Post()
-  // @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
-  async create(@Request() req, @Body() createAnswerDto: CreateAnswerDto) {
-    return this.answerService.create(req.user?.sub, createAnswerDto);
-  }
+  // ========== 可选认证的路由 (RegisterUnAuthAnswerAPIRouter) ==========
 
+  @OptionalAuth()
   @Get('info')
   async getAnswerInfo(@Query() answerInfoDto: AnswerInfoDto, @Request() req) {
     return this.answerService.getAnswerInfo(answerInfoDto.id, req.user?.sub);
   }
 
+  @OptionalAuth()
+  @Get('page')
+  async getAnswerPage(@Query() answerPageDto: AnswerPageDto, @Request() req) {
+    return this.answerService.getAnswerPage(answerPageDto, req.user?.sub);
+  }
+
+  // ========== 需要认证的路由 (RegisterAnswerAPIRouter) ==========
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Request() req, @Body() createAnswerDto: CreateAnswerDto) {
+    return this.answerService.create(req.user.sub, createAnswerDto);
+  }
+
   @Put()
-  // @UseGuards(JwtAuthGuard)
   async update(@Request() req, @Body() updateAnswerDto: UpdateAnswerDto) {
-    return this.answerService.update(req.user?.sub, updateAnswerDto);
+    return this.answerService.update(req.user.sub, updateAnswerDto);
+  }
+
+  @Post('acceptance')
+  async acceptAnswer(@Request() req, @Body() acceptAnswerDto: AcceptAnswerDto) {
+    return this.answerService.acceptAnswer(req.user.sub, acceptAnswerDto);
   }
 
   @Delete()
-  // @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Request() req, @Query('id') id: string) {
-    return this.answerService.remove(req.user?.sub, id);
+    return this.answerService.remove(req.user.sub, id);
   }
 
   @Post('recover')
-  // @UseGuards(JwtAuthGuard)
   async recover(@Request() req, @Body() body: { id: string }) {
-    return this.answerService.recover(req.user?.sub, body.id);
-  }
-
-  // 答案列表
-  @Get('page')
-  async getAnswerPage(@Query() answerPageDto: AnswerPageDto) {
-    return this.answerService.getAnswerPage(answerPageDto);
-  }
-
-  // 答案接受
-  @Post('acceptance')
-  // @UseGuards(JwtAuthGuard)
-  async acceptAnswer(@Request() req, @Body() acceptAnswerDto: AcceptAnswerDto) {
-    return this.answerService.acceptAnswer(req.user?.sub, acceptAnswerDto);
-  }
-
-  // 个人答案页面
-  @Get('personal/answer/page')
-  async getPersonalAnswerPage(@Query() personalAnswerPageDto: PersonalAnswerPageDto) {
-    return this.answerService.getPersonalAnswerPage(personalAnswerPageDto);
+    return this.answerService.recover(req.user.sub, body.id);
   }
 }

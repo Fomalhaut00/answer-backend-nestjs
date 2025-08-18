@@ -1,16 +1,17 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Body, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
   Query,
   Request,
   UseGuards,
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
+import { OptionalAuth } from '../../decorators/public.decorator';
 import { CommentService } from './comment.service';
 import { 
   CreateCommentDto,
@@ -24,41 +25,36 @@ import {
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
-  // 评论基本CRUD操作
-  @Post()
-  // @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
-  async create(@Request() req, @Body() createCommentDto: CreateCommentDto) {
-    return this.commentService.create(req.user?.sub, createCommentDto);
+  // ========== 可选认证的路由 (RegisterUnAuthAnswerAPIRouter) ==========
+
+  @OptionalAuth()
+  @Get('page')
+  async getCommentPage(@Query() commentPageDto: CommentPageDto, @Request() req) {
+    return this.commentService.getCommentPage(commentPageDto, req.user?.sub);
   }
 
+  @OptionalAuth()
   @Get()
   async getComment(@Query() getCommentDto: GetCommentDto, @Request() req) {
     return this.commentService.getComment(getCommentDto.id, req.user?.sub);
   }
 
-  @Put()
-  // @UseGuards(JwtAuthGuard)
-  async update(@Request() req, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentService.update(req.user?.sub, updateCommentDto);
+  // ========== 需要认证的路由 (RegisterAnswerAPIRouter) ==========
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Request() req, @Body() createCommentDto: CreateCommentDto) {
+    return this.commentService.create(req.user.sub, createCommentDto);
   }
 
   @Delete()
-  // @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Request() req, @Query('comment_id') commentId: string) {
-    return this.commentService.remove(req.user?.sub, commentId);
+    return this.commentService.remove(req.user.sub, commentId);
   }
 
-  // 评论列表
-  @Get('page')
-  async getCommentPage(@Query() commentPageDto: CommentPageDto) {
-    return this.commentService.getCommentPage(commentPageDto);
-  }
-
-  // 个人评论页面
-  @Get('personal/comment/page')
-  async getPersonalCommentPage(@Query() personalCommentPageDto: PersonalCommentPageDto) {
-    return this.commentService.getPersonalCommentPage(personalCommentPageDto);
+  @Put()
+  async update(@Request() req, @Body() updateCommentDto: UpdateCommentDto) {
+    return this.commentService.update(req.user.sub, updateCommentDto);
   }
 }

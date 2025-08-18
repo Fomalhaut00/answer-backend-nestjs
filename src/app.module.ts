@@ -18,7 +18,13 @@ import { SearchModule } from './modules/search/search.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { CollectionModule } from './modules/collection/collection.module';
+import { FollowModule } from './modules/follow/follow.module';
+import { ReportModule } from './modules/report/report.module';
+import { UploadModule } from './modules/upload/upload.module';
+import { RankModule } from './modules/rank/rank.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AdminGuard } from './guards/admin.guard';
 
 @Module({
   imports: [
@@ -41,6 +47,11 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     ActivityModule,
     NotificationModule,
     AdminModule,
+    CollectionModule,
+    FollowModule,
+    ReportModule,
+    UploadModule,
+    RankModule,
   ],
   controllers: [AppController],
   providers: [
@@ -48,6 +59,10 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AdminGuard,
     },
   ],
 })

@@ -21,36 +21,33 @@ import {
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
+  // ========== 需要认证的路由 (RegisterAnswerAPIRouter) ==========
+
+  @Get('status')
+  async getRedDot(@Request() req) {
+    return this.notificationService.getRedDot(req.user.sub);
+  }
+
+  @Put('status')
+  @HttpCode(HttpStatus.OK)
+  async clearRedDot(@Request() req) {
+    return this.notificationService.clearRedDot(req.user.sub);
+  }
+
   @Get('page')
-  // @UseGuards(JwtAuthGuard)
   async getNotificationPage(@Request() req, @Query() notificationPageDto: NotificationPageDto) {
-    return this.notificationService.getNotificationPage(req.user?.sub, notificationPageDto);
+    return this.notificationService.getNotificationPage(req.user.sub, notificationPageDto);
   }
 
-  @Get('unread')
-  // @UseGuards(JwtAuthGuard)
-  async getUnreadCount(@Request() req) {
-    return this.notificationService.getUnreadCount(req.user?.sub);
-  }
-
-  @Put('read')
-  // @UseGuards(JwtAuthGuard)
+  @Put('read/state/all')
   @HttpCode(HttpStatus.OK)
-  async readNotification(@Request() req, @Body() readNotificationDto: ReadNotificationDto) {
-    return this.notificationService.readNotification(req.user?.sub, readNotificationDto);
+  async clearUnRead(@Request() req) {
+    return this.notificationService.clearUnRead(req.user.sub);
   }
 
-  @Put('read/all')
-  // @UseGuards(JwtAuthGuard)
+  @Put('read/state')
   @HttpCode(HttpStatus.OK)
-  async readAllNotifications(@Request() req, @Body() body: { type?: string }) {
-    return this.notificationService.readAllNotifications(req.user?.sub, body.type);
-  }
-
-  @Delete('clear')
-  // @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async clearNotifications(@Request() req, @Body() clearNotificationDto: ClearNotificationDto) {
-    return this.notificationService.clearNotifications(req.user?.sub, clearNotificationDto);
+  async clearIDUnRead(@Request() req, @Body() body: { id: string }) {
+    return this.notificationService.clearIDUnRead(req.user.sub, body.id);
   }
 }
